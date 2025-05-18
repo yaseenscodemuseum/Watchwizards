@@ -551,17 +551,21 @@ input:focus, select:focus, textarea:focus {
   justify-content: center;
   gap: 0.5rem;
   padding: 2rem 3rem;
-  background: rgba(109, 40, 217, 0.2);
-  border: 2px solid rgba(147, 51, 234, 0.5);
+  background: linear-gradient(135deg, #4c1d95 0%, #6d28d9 50%, #7c3aed 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 1.5rem;
   color: white;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
   backdrop-filter: blur(5px);
   min-width: 250px;
   position: relative;
   overflow: hidden;
   text-decoration: none;
+  box-shadow: 
+    0 4px 12px rgba(109, 40, 217, 0.5),
+    0 0 20px rgba(147, 51, 234, 0.3),
+    inset 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
 .mode-button::before {
@@ -571,22 +575,47 @@ input:focus, select:focus, textarea:focus {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle at center, rgba(147, 51, 234, 0.3) 0%, transparent 60%);
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2) 0%, transparent 60%);
   transform: scale(0);
   transition: transform 0.6s ease-out;
 }
 
+.mode-button::after {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: -100%;
+  width: 300%;
+  height: 300%;
+  background: linear-gradient(
+    45deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 45%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0.1) 55%,
+    transparent 100%
+  );
+  transform: rotate(45deg);
+  transition: all 0.5s ease-out;
+}
+
 .mode-button:hover {
-  background: rgba(147, 51, 234, 0.3);
-  border-color: rgba(192, 132, 252, 0.8);
-  box-shadow: 
-    0 0 20px rgba(147, 51, 234, 0.4),
-    0 0 40px rgba(192, 132, 252, 0.2);
+  background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 50%, #8b5cf6 100%);
   transform: translateY(-3px);
+  box-shadow: 
+    0 6px 20px rgba(109, 40, 217, 0.7),
+    0 0 30px rgba(147, 51, 234, 0.4),
+    inset 0 0 15px rgba(255, 255, 255, 0.3);
 }
 
 .mode-button:hover::before {
   transform: scale(1) rotate(45deg);
+}
+
+.mode-button:hover::after {
+  top: -30%;
+  left: -30%;
+  animation: glitter 1.5s infinite linear;
 }
 
 .mode-button span:first-child {
