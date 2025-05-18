@@ -734,13 +734,13 @@ a:hover, button:hover {
 }
 
 .language-option input[type="checkbox"] {
-  width: 1.2rem;
-  height: 1.2rem;
+  width: 1rem;
+  height: 1rem;
   accent-color: #6d28d9;
   margin: 0;
   cursor: pointer;
   border-radius: 0.25rem;
-  border: 2px solid rgba(147, 51, 234, 0.5);
+  border: 1px solid rgba(147, 51, 234, 0.5);
   background-color: rgba(17, 24, 39, 0.8);
   transition: all 0.3s ease;
 }
@@ -771,13 +771,13 @@ a:hover, button:hover {
 }
 
 .content-type-option input[type="checkbox"] {
-  width: 1.2rem;
-  height: 1.2rem;
+  width: 1rem;
+  height: 1rem;
   accent-color: #6d28d9;
   margin: 0;
   cursor: pointer;
   border-radius: 0.25rem;
-  border: 2px solid rgba(147, 51, 234, 0.5);
+  border: 1px solid rgba(147, 51, 234, 0.5);
   background-color: rgba(17, 24, 39, 0.8);
   transition: all 0.3s ease;
 }
