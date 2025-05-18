@@ -9,20 +9,25 @@ export default function SelectionPage() {
 
   return (
     <main className="h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-gray-900 relative overflow-hidden selection-page">
-      {/* Magical particles/stars effect */}
-      <div className="absolute inset-0 z-0">
-        <div className="stars"></div>
-      </div>
-
       {/* Title */}
-      <motion.h1 
-        className="font-redaction text-white bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400 fixed top-1rem left-0 right-0 text-center z-50"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        WatchWizards
-      </motion.h1>
+      <div className="fixed top-8rem left-1rem right-0 flex items-center justify-center gap-4 z-50">
+        <motion.a
+          href="https://yaseensportfolio.vercel.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="cursor-pointer"
+          whileHover={{ scale: 1.05 }}
+        >
+          <motion.h1 
+            className="font-redaction text-white bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400 text-6xl md:text-8xl"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            WatchWizards
+          </motion.h1>
+        </motion.a>
+      </div>
 
       {/* Navigation */}
       <nav className="nav-container">
@@ -80,6 +85,11 @@ export default function SelectionPage() {
             </motion.button>
           </Link>
         </div>
+      </div>
+
+      {/* Magical particles/stars effect */}
+      <div className="absolute inset-0 z-0">
+        <div className="stars"></div>
       </div>
 
       {/* Magical sparkles */}
