@@ -56,33 +56,16 @@ export default function SelectionPage() {
           Choose Your Magical Journey
         </motion.h2>
 
-        <div className="mode-buttons">
+        <div className="selection-options">
           <Link href="/solo">
-            <motion.button
+            <motion.div
+              className="option-card"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="mode-button"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
             >
-              <span>Personal Recommendations</span>
-              <span>Find your perfect match</span>
-            </motion.button>
-          </Link>
-
-          <Link href="/group">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="mode-button"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.6, duration: 0.5 }}
-            >
-              <span>Watch with Friends</span>
-              <span>Group movie night</span>
-            </motion.button>
+              <div className="option-icon">🎬</div>
+              <span>Solo movie night</span>
+            </motion.div>
           </Link>
         </div>
       </div>
