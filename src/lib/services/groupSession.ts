@@ -2,6 +2,17 @@ import { GroupSession, GroupSession as IGroupSession } from '../models/GroupSess
 import { connectDB } from './db';
 import { nanoid } from 'nanoid';
 
+interface Recommendation {
+  id: string;
+  title: string;
+  posterPath?: string;
+  overview: string;
+  releaseDate: string;
+  voteAverage: number;
+  userId: string;
+  votes: number;
+}
+
 export class GroupSessionService {
   private static instance: GroupSessionService;
 
@@ -188,11 +199,7 @@ export class GroupSessionService {
     if (!session) return null;
 
     // Group recommendations by user and get top 2 for each
-    const userRecommendations = session.recommendations?.reduce((acc: Record<string, typeof session.recommendations>, rec: {
-      id: string;
-      userId: string;
-      votes: number;
-    }) => {
+    const userRecommendations = session.recommendations?.reduce((acc: Record<string, Recommendation[]>, rec: Recommendation) => {
       if (!acc[rec.userId]) {
         acc[rec.userId] = [];
       }
@@ -201,9 +208,10 @@ export class GroupSessionService {
     }, {});
 
     // Sort each user's recommendations by votes and take top 2
-    const topRecommendations = Object.values(userRecommendations || {}).flatMap(userRecs => {
-      return (userRecs || []).sort((a, b) => (b?.votes || 0) - (a?.votes || 0)).slice(0, 2);
-    });
+    const recommendationsArray = Object.values(userRecommendations || {}) as Recommendation[][];
+    const topRecommendations = recommendationsArray.flatMap(userRecs => 
+      userRecs.sort((a, b) => b.votes - a.votes).slice(0, 2)
+    );
 
     session.recommendations = topRecommendations;
     await session.save();
