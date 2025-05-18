@@ -63,7 +63,6 @@ export default function SelectionPage() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <div className="option-icon">🎬</div>
               <span>Solo movie night</span>
             </motion.div>
           </Link>
