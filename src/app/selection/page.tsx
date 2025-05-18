@@ -59,7 +59,7 @@ export default function SelectionPage() {
         <div className="selection-options">
           <Link href="/solo">
             <motion.div
-              className="option-card"
+              className="mode-button"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
