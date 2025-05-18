@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
 import axios from 'axios';
+import { AIService, MoviePreference } from '@/lib/services/AIService';
 
 // Interfaces
 interface TMDBGenre {
@@ -108,18 +109,6 @@ interface MovieRecommendation {
   description: string;
   genres: string[];
   language: string;
-}
-
-interface MoviePreference {
-  mediaType: string[];
-  languages: string[];
-  genres: string[];
-  plotPreference?: string;
-  similarMovies?: string[];
-  preferredYear?: string;
-  preferredCast?: string[];
-  minImdbRating?: number;
-  allowAdult: boolean;
 }
 
 // Initialize AI clients
@@ -603,224 +592,6 @@ async function enrichMovieWithDetails(
   }
 }
 
-class AIService {
-  async getRecommendations(options: MoviePreference, customPrompt?: string): Promise<{ results: MovieDetails[] }> {
-    let text = '';
-    const prompt = customPrompt || this.getAIPrompt(options);
-
-    // Try each AI service in sequence
-    try {
-      // Try Gemini first
-      try {
-        console.log("Trying Gemini...");
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        text = response.text();
-        console.log("Gemini response received");
-      } catch (error: any) {
-        console.log("Gemini error:", error);
-        
-        // Try OpenAI as first fallback
-        try {
-          console.log("Trying OpenAI...");
-          const completion = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
-            messages: [{ role: "user", content: prompt }],
-          });
-          text = completion.choices[0]?.message?.content || '';
-          console.log("OpenAI response received");
-        } catch (openaiError: any) {
-          console.log("OpenAI error:", openaiError);
-
-          // Try DeepSeek as second fallback
-          try {
-            console.log("Trying DeepSeek...");
-            const deepseekResponse = await fetch('https://api.openrouter.ai/api/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                'HTTP-Referer': 'https://watchwizards.vercel.app/',
-                'X-Title': 'WatchWizards'
-              },
-              body: JSON.stringify({
-                model: 'deepseek/deepseek-chat',
-                messages: [{ role: 'user', content: prompt }]
-              })
-            });
-
-            if (!deepseekResponse.ok) {
-              throw new Error(`DeepSeek API error: ${deepseekResponse.status} ${deepseekResponse.statusText}`);
-            }
-
-            const deepseekData = await deepseekResponse.json();
-            text = deepseekData.choices?.[0]?.message?.content || '';
-            if (!text) {
-              throw new Error('Empty response from DeepSeek');
-            }
-            console.log("DeepSeek response received");
-          } catch (deepseekError: any) {
-            console.log("DeepSeek error:", deepseekError);
-            throw new Error('All AI services failed');
-          }
-        }
-      }
-
-      if (!text) {
-        throw new Error('Failed to generate recommendations from any AI service');
-      }
-
-      console.log("AI response:", text);
-      const recommendations = await parseAndEnrichRecommendationsFromAI(text, options.languages, options.mediaType);
-
-      if (!recommendations?.length || recommendations.length === 0) {
-        // If no exact matches found, try fallback to popular movies
-        console.log("No exact matches found, trying fallback to popular movies...");
-        const fallbackRecommendations = await getPopularMoviesByGenreAndLanguage(
-          options.genres,
-          options.languages,
-          options.mediaType?.[0] || 'movie',
-          parseInt(options.preferredYear || '0')
-        );
-
-        if (fallbackRecommendations.length > 0) {
-          console.log(`Found ${fallbackRecommendations.length} fallback recommendations`);
-          return { results: fallbackRecommendations };
-        }
-
-        throw new Error('No recommendations found that match your criteria');
-      }
-
-      return { results: recommendations };
-    } catch (error: any) {
-      console.error('Error in getRecommendations:', error);
-      throw error;
-    }
-  }
-
-  private getAIPrompt(options: MoviePreference) {
-    const plotExamples = {
-      revenge: [
-        "* 올드보이 (Oldboy) (2003) - After 15 years of imprisonment, a man seeks brutal revenge against his mysterious captors, uncovering shocking truths. Similar to 'Count of Monte Cristo' in its revenge theme. | Genres: Mystery, Thriller, Drama",
-        "* Lady Vengeance (2005) - A woman wrongfully imprisoned plots an elaborate revenge against the man who framed her, methodically gathering allies. | Genres: Crime, Drama, Thriller"
-      ],
-      timeTravel: [
-        "* 時をかける少女 (The Girl Who Leapt Through Time) (2006) - A high school girl discovers she can jump through time, but learns that changing the past has consequences. Similar to 'Back to the Future' in exploring time paradoxes. | Genres: Animation, Sci-Fi, Romance",
-        "* Steins;Gate (2011) - A self-proclaimed mad scientist accidentally invents time travel through modified microwave, leading to devastating consequences. | Genres: Sci-Fi, Thriller, Drama"
-      ],
-      comingOfAge: [
-        "* Les Quatre Cents Coups (The 400 Blows) (1959) - A troubled young boy in Paris struggles with family issues and school, seeking his own path in life. Similar to 'Stand By Me' in its raw portrayal of youth. | Genres: Drama",
-        "* 3 Idiots (2009) - Three engineering students challenge the academic system while discovering their true passions and friendship. | Genres: Comedy, Drama"
-      ]
-    };
-
-    const languageExamples = {
-      en: [
-        "* Inception (2010) - A skilled thief uses dream-sharing technology to plant ideas in people's minds. Similar to 'The Matrix' in its reality-bending concept. | Genres: Sci-Fi, Action, Thriller",
-        "* The Godfather (1972) - A crime family's patriarch transfers control to his reluctant son, exploring themes of power and family loyalty. | Genres: Crime, Drama"
-      ],
-      ko: [
-        "* 기생충 (Parasite) (2019) - A poor family infiltrates a wealthy household, leading to an unpredictable series of events that mirror class inequality. Similar to 'Shoplifters' in examining social disparity. | Genres: Drama, Thriller",
-        "* 아가씨 (The Handmaiden) (2016) - A complex tale of deception and romance in colonial Korea, with twists reminiscent of 'Gone Girl'. | Genres: Drama, Romance, Thriller"
-      ],
-      ja: [
-        "* 千と千尋の神隠し (Spirited Away) (2001) - A young girl must work in a supernatural bathhouse to save her parents, exploring themes of identity and courage like 'Alice in Wonderland'. | Genres: Animation, Adventure, Fantasy",
-        "* 七人の侍 (Seven Samurai) (1954) - Masterful tale of samurai defending a village, which inspired 'The Magnificent Seven'. | Genres: Action, Drama"
-      ],
-      hi: [
-        "* दंगल (Dangal) (2016) - Based on a true story of a father training his daughters to become wrestlers, challenging gender norms like 'Million Dollar Baby'. | Genres: Biography, Drama, Sport",
-        "* लगान (Lagaan) (2001) - A village stakes their future on a cricket match against British rulers, similar to 'The Longest Yard' in sports vs authority theme. | Genres: Drama, Sport"
-      ],
-      fr: [
-        "* Amélie (2001) - A whimsical woman secretly improves others' lives, sharing themes of human connection with 'Cinema Paradiso'. | Genres: Comedy, Romance",
-        "* La Haine (1995) - Raw portrayal of youth in Paris suburbs, similar to 'Do the Right Thing' in examining social tensions. | Genres: Drama, Crime"
-      ],
-      de: [
-        "* Das Leben der Anderen (The Lives of Others) (2006) - A Stasi agent becomes invested in the lives of those he surveils, similar to 'The Conversation' in surveillance themes. | Genres: Drama, Thriller",
-        "* Lola rennt (Run Lola Run) (1998) - A woman has 20 minutes to save her boyfriend, with a structure similar to 'Groundhog Day'. | Genres: Thriller, Action"
-      ],
-      es: [
-        "* El laberinto del fauno (Pan's Labyrinth) (2006) - A dark fantasy paralleling war reality, similar to 'Bridge to Terabithia' in blending fantasy and harsh reality. | Genres: Fantasy, Drama, War",
-        "* Todo sobre mi madre (All About My Mother) (1999) - A mother's journey after losing her son, exploring themes like 'Terms of Endearment'. | Genres: Drama"
-      ],
-      ur: [
-        "* خوبصورت (Khubsoorat) (2014) - A free spirit changes a royal household's rigid ways, similar to 'The Sound of Music' in themes. | Genres: Comedy, Romance",
-        "* بول (Bol) (2011) - A powerful examination of gender and society, sharing themes with 'Water'. | Genres: Drama"
-      ]
-    };
-
-    const relevantPlotExamples = options.plotPreference ? 
-      Object.entries(plotExamples)
-        .find(([theme]) => options.plotPreference?.toLowerCase().includes(theme.toLowerCase()))?.[1] 
-      : [];
-
-    const selectedLanguageExamples = options.languages
-      .map(lang => languageExamples[lang as keyof typeof languageExamples])
-      .filter(Boolean)
-      .flat();
-
-    const examples = relevantPlotExamples ? 
-      [...relevantPlotExamples, ...selectedLanguageExamples] : 
-      selectedLanguageExamples;
-
-    const prompt = `You are an expert film curator with deep knowledge of global cinema. Provide EXACTLY 5 movie recommendations that match the user's preferences, with special emphasis on plot and thematic elements.
-
-**User Preferences (In Priority Order):**
-${options.plotPreference ? `1. PLOT ELEMENTS (HIGHEST PRIORITY): "${options.plotPreference}"
-   - Must be central to the story, not just a minor element
-   - Look for similar themes, narrative structure, or emotional impact
-   - Consider both literal and thematic similarities` : ''}
-2. LANGUAGES: ${options.languages.join(', ')}
-   - Movies MUST be originally made in these languages
-   - Include both original title and English translation
-3. GENRES: ${options.genres.join(', ')}
-${options.similarMovies?.length ? `4. SIMILAR TO: ${options.similarMovies.join(', ')}
-   - Consider plot structure, themes, tone, and style` : ''}
-${options.preferredYear ? `5. PREFERRED YEAR: ${options.preferredYear}
-   - Consider movies within ±5 years if exact matches aren't found` : ''}
-${options.preferredCast?.length ? `6. NOTABLE CAST/CREW: ${options.preferredCast.join(', ')}` : ''}
-${options.minImdbRating ? `7. MINIMUM RATING: ${options.minImdbRating}` : ''}
-8. MATURE CONTENT: ${options.allowAdult ? 'Allowed' : 'Excluded'}
-
-**STRICT FORMAT RULES:**
-1. Each recommendation MUST follow this EXACT format:
-   * [Original Title] ([English Title if different]) ([Year]) - [Plot + Similarity Explanation] | Genres: [Genre1, Genre2, ...]
-
-2. Plot Description Requirements:
-   - First sentence: Summarize the main plot
-   - Second sentence: Explain why it matches user preferences
-   - If similar to a well-known movie, include comparison
-   - Example: "Like 'Movie X' in its approach to [theme]"
-
-3. Title Format:
-   - Start with "* " (asterisk and space)
-   - Original title in native script
-   - English title in parentheses
-   - Year in parentheses
-   - Hyphen
-   - Two-sentence description
-   - Pipe symbol
-   - Genres (comma-separated)
-
-**Examples of Correct Formatting:**
-${examples.join('\n')}
-
-**Critical Requirements:**
-1. MUST provide EXACTLY 5 recommendations
-2. ALL recommendations MUST be in the requested languages
-3. ALL recommendations MUST be real, existing movies/shows
-4. MUST prioritize plot/theme matching above all else
-5. MUST explain similarities to user preferences
-6. MUST follow the exact formatting shown in examples
-7. MUST include both original and English titles for non-English content
-
-Begin your recommendations now, following these formats exactly:`;
-
-    return prompt;
-  }
-}
-
 function buildMoviePreferences(data: RecommendationRequest) {
   return {
     mediaType: data.contentType || [],
@@ -928,41 +699,17 @@ async function getTMDBGenres(mediaType: string): Promise<{ id: number; name: str
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const options = buildMoviePreferences(data);
-
-    try {
-      const aiService = new AIService();
-      const recommendations = await aiService.getRecommendations(options);
-
-      if (!recommendations?.results || recommendations.results.length === 0) {
-        return NextResponse.json(
-          { error: 'No movies found that match your criteria. Please try different preferences.' },
-          { status: 404 }
-        );
-      }
-
-      // Sort recommendations based on title similarity to user query
-      if (data.query) {
-        const userQuery = data.query.toLowerCase();
-        recommendations.results.sort((a, b) => 
-          levenshteinDistance(a.title.toLowerCase(), userQuery) - 
-          levenshteinDistance(b.title.toLowerCase(), userQuery)
-        );
-      }
-
-      return NextResponse.json(recommendations);
-    } catch (error) {
-      console.error('Error processing recommendations:', error);
-      return NextResponse.json(
-        { error: 'Failed to get movie recommendations. Please try again with different preferences.' },
-        { status: 404 }
-      );
-    }
+    const preferences = buildMoviePreferences(data);
+    const aiService = new AIService();
+    
+    const recommendations = await aiService.getRecommendations(preferences);
+    
+    return NextResponse.json(recommendations);
   } catch (error) {
-    console.error('Request processing error:', error);
+    console.error('Error in recommendations route:', error);
     return NextResponse.json(
-      { error: 'Invalid request format' },
-      { status: 400 }
+      { error: 'Failed to get recommendations' },
+      { status: 500 }
     );
   }
 }
@@ -988,6 +735,4 @@ function levenshteinDistance(a: string, b: string): number {
   }
   return matrix[b.length][a.length];
 }
-
-export { AIService };
 
