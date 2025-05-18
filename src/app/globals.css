@@ -174,7 +174,7 @@ h1.font-redaction::before {
   padding: 1rem 2rem;
   width: 280px;
   margin: 0 auto;
-  border-radius: 2rem;
+  border-radius: 1rem;
   background: linear-gradient(135deg, #4c1d95 0%, #6d28d9 50%, #7c3aed 100%);
   color: white;
   text-decoration: none;
@@ -522,7 +522,7 @@ a:hover, button:hover {
   padding: 1rem 2rem;
   width: 280px;
   margin: 0 auto;
-  border-radius: 2rem;
+  border-radius: 1rem;
   background: linear-gradient(135deg, #4c1d95 0%, #6d28d9 50%, #7c3aed 100%);
   color: white;
   text-decoration: none;
@@ -738,6 +738,16 @@ a:hover, button:hover {
   height: 1.2rem;
   accent-color: #6d28d9;
   margin: 0;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  border: 2px solid rgba(147, 51, 234, 0.5);
+  background-color: rgba(17, 24, 39, 0.8);
+  transition: all 0.3s ease;
+}
+
+.language-option input[type="checkbox"]:checked {
+  background-color: #6d28d9;
+  border-color: #6d28d9;
 }
 
 .language-option span {
@@ -765,6 +775,16 @@ a:hover, button:hover {
   height: 1.2rem;
   accent-color: #6d28d9;
   margin: 0;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  border: 2px solid rgba(147, 51, 234, 0.5);
+  background-color: rgba(17, 24, 39, 0.8);
+  transition: all 0.3s ease;
+}
+
+.content-type-option input[type="checkbox"]:checked {
+  background-color: #6d28d9;
+  border-color: #6d28d9;
 }
 
 .content-type-option span {
