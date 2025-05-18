@@ -86,7 +86,7 @@ WatchWizards is an AI-powered movie recommendation platform that helps users dis
 
 ## 📞 Contact
 
-- **Website**: [yaseensportfolio.vercel.app]
+- **Website**: [https://yaseensportfolio.vercel.app]
 - **Email**: [yaseenabdulaziz18@gmail.com]
 - **LinkedIn**: [https://www.linkedin.com/in/mohammad-yaseen-abdul-aziz/]
 - **GitHub**: [https://github.com/yaseenscodemuseum]
