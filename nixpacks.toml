@@ -13,4 +13,3 @@ cmd = 'npm run start'
 [build]
 src = '.'
 nodeVersion = '20'
-builder = 'nodejs' 
