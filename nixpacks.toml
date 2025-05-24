@@ -13,4 +13,5 @@ cmd = 'npm run start'
 [build]
 src = '.'
 nodeVersion = '20'
-buildCommand = 'npm run build' 
+buildCommand = 'npm run build'
+startCommand = 'npm run start' 
