@@ -11,4 +11,4 @@ cmds = ['yarn build']
 cmd = 'yarn start'
 
 [build]
-src = 'src' 
+src = '.' 
