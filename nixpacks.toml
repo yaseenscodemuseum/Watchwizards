@@ -12,4 +12,6 @@ cmd = 'yarn start'
 
 [build]
 src = '.'
-nodeVersion = '20' 
+nodeVersion = '20'
+buildCommand = 'yarn build'
+startCommand = 'yarn start' 
