@@ -11,5 +11,5 @@ cmds = ['npm run build']
 cmd = 'npm run start'
 
 [build]
-src = '.'
+src = 'src'
 nodeVersion = '20' 
