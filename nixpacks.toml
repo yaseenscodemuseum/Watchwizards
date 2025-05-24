@@ -2,13 +2,13 @@
 nixPkgs = ['nodejs_20']
 
 [phases.install]
-cmds = ['npm install']
+cmds = ['cd /app && npm install']
 
 [phases.build]
-cmds = ['npm run build']
+cmds = ['cd /app && npm run build']
 
 [start]
-cmd = 'npm run start'
+cmd = 'cd /app && npm run start'
 
 [build]
 src = '.'
