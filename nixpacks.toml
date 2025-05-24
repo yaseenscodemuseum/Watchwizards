@@ -1,17 +1,17 @@
 [phases.setup]
-nixPkgs = ['nodejs_20', 'nodePackages.npm']
+nixPkgs = ['nodejs_20']
 
 [phases.install]
-cmds = ['/usr/bin/npm install']
+cmds = ['curl -fsSL https://deb.nodesource.com/setup_20.x | bash -', 'apt-get update && apt-get install -y nodejs']
 
 [phases.build]
-cmds = ['/usr/bin/npm install', '/usr/bin/npm run build']
+cmds = ['npm install', 'npm run build']
 
 [start]
-cmd = '/usr/bin/npm run start'
+cmd = 'npm run start'
 
 [build]
 src = '.'
 nodeVersion = '20'
-buildCommand = '/usr/bin/npm install && /usr/bin/npm run build'
-startCommand = '/usr/bin/npm run start' 
+buildCommand = 'npm install && npm run build'
+startCommand = 'npm run start' 
