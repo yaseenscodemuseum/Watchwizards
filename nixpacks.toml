@@ -2,16 +2,16 @@
 nixPkgs = ['nodejs_20', 'nodePackages.npm']
 
 [phases.install]
-cmds = ['npm install']
+cmds = ['/usr/bin/npm install']
 
 [phases.build]
-cmds = ['npm install', 'npm run build']
+cmds = ['/usr/bin/npm install', '/usr/bin/npm run build']
 
 [start]
-cmd = 'npm run start'
+cmd = '/usr/bin/npm run start'
 
 [build]
 src = '.'
 nodeVersion = '20'
-buildCommand = 'npm install && npm run build'
-startCommand = 'npm run start' 
+buildCommand = '/usr/bin/npm install && /usr/bin/npm run build'
+startCommand = '/usr/bin/npm run start' 
