@@ -11,8 +11,11 @@ cmds = ['npm run build']
 cmd = 'npm run start'
 
 [build]
-src = 'src'
+src = '.'
 nodeVersion = '20'
 workDir = '/app'
 buildCommand = 'npm run build'
 startCommand = 'npm run start'
+
+[variables]
+NEXT_TELEMETRY_DISABLED = '1'
