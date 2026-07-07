@@ -67,55 +67,6 @@ npm run build
 npm start
 ```
 
-## Deploying to Vercel
-
-### One-click
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yaseenscodemuseum/Watchwizards)
-
-### Manual
-
-1. Push your repo to GitHub
-2. Import the project at [vercel.com/new](https://vercel.com/new)
-3. Add environment variables in the Vercel dashboard (Settings > Environment Variables)
-4. Deploy — Vercel auto-detects Next.js, no extra config needed
-
-### Environment Variables on Vercel
-
-Add these in **Settings > Environment Variables**. All are read at runtime (`process.env`) — none are embedded at build time, so you can change them without redeploying.
-
-| Variable | Required | Description |
-|---|---|---|
-| `TMDB_API_KEY` | Yes | TMDB API key for movie/show data |
-| `GEMINI_API_KEY` | At least one AI key | Google Gemini API key |
-| `ANTHROPIC_API_KEY` | At least one AI key | Anthropic Claude API key |
-| `OPENAI_API_KEY` | At least one AI key | OpenAI API key |
-| `OPENROUTER_API_KEY` | At least one AI key | OpenRouter API key (uses DeepSeek) |
-| `OMDB_API_KEY` | No | OMDB API key (supplementary data) |
-
-**At least one AI provider key is required.** The app tries them in order (Claude > Gemini > OpenAI > DeepSeek) and uses the first one that succeeds. If you only want one, Gemini is the cheapest option.
-
-## Project Structure
-
-```
-src/
-  app/
-    page.tsx                           # Landing page
-    selection/page.tsx                 # Mode selection (Solo / Group)
-    solo/page.tsx                      # Solo recommendation form + results
-    popular/page.tsx                   # Popular movies & shows (TMDB)
-    group/page.tsx                     # Group mode (coming soon)
-    api/
-      recommendations/
-        route.ts                       # POST — main recommendation endpoint
-        similar/route.ts               # POST — similar recommendations
-        different/route.ts             # POST — different recommendations
-        service.ts                     # AI providers, TMDB enrichment, prompts
-      popular/route.ts                 # GET — trending movies & shows
-    globals.css                        # All styles
-    layout.tsx                         # Root layout, fonts, analytics
-```
-
 ## Credits
 
 If you use this repo, please credit me or send me a photo of you using it on one of my socials — it'd make me really happy to see people appreciating my work.
