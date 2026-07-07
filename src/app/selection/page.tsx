@@ -37,12 +37,14 @@ export default function SelectionPage() {
         <Link href="/popular" className={`nav-link ${pathname === '/popular' ? 'active' : ''}`}>
           Popular Right Now
         </Link>
-        <Link href="/about" className={`nav-link ${pathname === '/about' ? 'active' : ''}`}>
-          About Us
-        </Link>
-        <Link href="/contact" className={`nav-link ${pathname === '/contact' ? 'active' : ''}`}>
+        <a
+          href="https://yaseensportfolio.vercel.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="nav-link"
+        >
           Contact Us
-        </Link>
+        </a>
       </nav>
 
       {/* Main content */}

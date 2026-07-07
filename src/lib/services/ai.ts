@@ -113,7 +113,7 @@ export class AIService {
   private async geminiGenerateQuery(preferences: MoviePreference): Promise<ApiQuery> {
     if (!this.gemini) throw new Error('Gemini API not initialized');
     
-    const model = this.gemini.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = this.gemini.getGenerativeModel({ model: "gemini-2.5-flash" });
     
     const prompt = this.buildAIPrompt(preferences);
     
@@ -136,7 +136,7 @@ export class AIService {
     const prompt = this.buildAIPrompt(preferences);
     
     const completion = await this.openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o-mini",
       messages: [
         { 
           role: "system", 

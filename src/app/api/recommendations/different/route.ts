@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { AIService } from '../route';
+import { AIService } from '../service';
 
 interface MoviePreference {
   languages: string[];
@@ -39,8 +39,7 @@ Please recommend 5 DIFFERENT movies that:
    ${preferences.plotPreference ? `- Plot elements: ${preferences.plotPreference}` : ''}
    ${preferences.preferredYear ? `- Preferred year: ${preferences.preferredYear}` : ''}
 
-Format each recommendation exactly as:
-* Movie Title (Year) - Brief description explaining how it offers a fresh perspective while still being appealing to fans of the above movies. | Genres: Genre1, Genre2`;
+For each recommendation, the description should explain how it offers a fresh perspective while still appealing to fans of the above movies.`;
 
     // Update the preferences to exclude the current movies
     const updatedPreferences = {

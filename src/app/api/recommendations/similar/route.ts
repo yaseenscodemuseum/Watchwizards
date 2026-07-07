@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { AIService } from '../route';
+import { AIService } from '../service';
 
 interface MoviePreference {
   languages: string[];
@@ -39,8 +39,7 @@ Please recommend 5 DIFFERENT movies that:
    ${preferences.plotPreference ? `- Plot elements: ${preferences.plotPreference}` : ''}
    ${preferences.preferredYear ? `- Preferred year: ${preferences.preferredYear}` : ''}
 
-Format each recommendation exactly as:
-* Movie Title (Year) - Brief description explaining why it's similar to the above movies and how it matches the themes/style. | Genres: Genre1, Genre2`;
+For each recommendation, the description should explain why it's similar to the above movies and how it matches their themes/style.`;
 
     // Update the preferences to include the similar movies
     const updatedPreferences = {

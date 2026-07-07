@@ -405,12 +405,12 @@ export default function SoloPage() {
                   <label>Content Type</label>
                   <div className="content-type-options">
                     <label className="content-type-option">
-                      <input type="checkbox" name="contentType" value="indie" />
-                      <span>Indie Films</span>
+                      <input type="checkbox" name="contentType" value="movie" />
+                      <span>Movies</span>
                     </label>
                     <label className="content-type-option">
-                      <input type="checkbox" name="contentType" value="movie" />
-                      <span>Movie</span>
+                      <input type="checkbox" name="contentType" value="webseries" />
+                      <span>Shows</span>
                     </label>
                   </div>
                 </div>

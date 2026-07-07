@@ -2,12 +2,13 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['image.tmdb.org'], // For movie posters
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'image.tmdb.org',
+      },
+    ],
   },
-  distDir: '.next',
-  experimental: {
-    appDir: true
-  }
-}
+};
 
-export default nextConfig; 
+export default nextConfig;
