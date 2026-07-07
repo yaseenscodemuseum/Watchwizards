@@ -31,6 +31,29 @@ body {
   overflow: hidden;
 }
 
+.site-logo {
+  position: absolute;
+  top: 18px;
+  left: 29px;
+  z-index: 1001;
+  display: block;
+}
+
+.site-logo:hover {
+  transform: scale(1.05);
+}
+
+.site-logo img {
+  height: 75px;
+  width: auto;
+  filter: brightness(0) invert(1);
+  transition: transform 0.3s ease;
+}
+
+body:has(.solo-page) .site-logo {
+  display: none;
+}
+
 body::before {
   content: '';
   position: absolute;
@@ -912,11 +935,28 @@ input:focus, select:focus, textarea:focus {
   font-size: 0.95rem;
 }
 
+.selection-container:has(.recommendations-container) {
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.selection-container:has(.recommendations-container) .selection-title {
+  position: fixed;
+  top: 2rem;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 1.8rem;
+  margin: 0;
+  z-index: 50;
+  line-height: 2.4rem;
+}
+
 .recommendations-container {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0.5rem 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1039,18 +1079,18 @@ input:focus, select:focus, textarea:focus {
 }
 
 .carousel-content .recommendation-description {
-  font-size: 0.95rem;
-  line-height: 1.5;
+  font-size: 0.85rem;
+  line-height: 1.4;
   color: rgba(255, 255, 255, 0.9);
   display: -webkit-box;
-  -webkit-line-clamp: 4;
-  line-clamp: 4;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-top: 0.5rem;
-  margin-bottom: 1rem;
-  max-height: 6rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+  max-height: 3rem;
 }
 
 .recommendation-links {
@@ -1094,24 +1134,20 @@ input:focus, select:focus, textarea:focus {
 
 .carousel-content .recommendation-content h3 {
   font-family: 'Playfair Display', serif;
-  font-size: 1.3rem;
-  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
   color: #fff;
-  line-height: 1.4;
-  overflow: visible;
-  text-overflow: initial;
-  white-space: normal;
-  display: block;
-  -webkit-line-clamp: initial;
-  line-clamp: initial;
-  -webkit-box-orient: initial;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .carousel-content .recommendation-links {
   display: flex;
   gap: 0.75rem;
   margin-top: auto;
-  padding-top: 1rem;
+  padding-top: 0.5rem;
 }
 
 /* Carousel Styles */
@@ -1127,18 +1163,19 @@ input:focus, select:focus, textarea:focus {
 .carousel-indicators {
   display: flex;
   justify-content: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   gap: 0.5rem;
 }
 
 .carousel-indicator {
-  width: 2rem;
-  height: 2rem;
+  width: 2.25rem;
+  height: 2.25rem;
   border-radius: 50%;
   background: rgba(30, 20, 60, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
   font-weight: bold;
+  font-size: 0.95rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1166,7 +1203,7 @@ input:focus, select:focus, textarea:focus {
   width: 100%;
   max-width: 800px;
   height: auto;
-  min-height: 650px;
+  min-height: 450px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1177,10 +1214,11 @@ input:focus, select:focus, textarea:focus {
 
 .carousel-content .recommendation-card {
   width: 100%;
-  height: auto;
-  min-height: 650px;
+  height: 450px;
+  min-height: 450px;
+  max-height: 450px;
   margin: 0 auto;
-  max-width: 600px;
+  max-width: 520px;
   overflow: visible;
   display: flex;
   flex-direction: column;
@@ -1192,6 +1230,14 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   cursor: pointer;
   backface-visibility: hidden;
+}
+
+.carousel-content .recommendation-image {
+  height: 180px;
+}
+
+.carousel-content .recommendation-content {
+  padding: 0.75rem 1rem;
 }
 
 .carousel-content .recommendation-card.active {
@@ -1337,13 +1383,16 @@ input:focus, select:focus, textarea:focus {
   }
   
   .carousel-content {
-    min-height: 700px;
+    min-height: 420px;
     max-width: 600px;
     perspective: 800px;
   }
-  
+
   .carousel-content .recommendation-card {
-    min-height: 700px;
+    height: 420px;
+    min-height: 420px;
+    max-height: 420px;
+    max-width: 420px;
   }
   
   .carousel-wrapper {
@@ -1362,13 +1411,15 @@ input:focus, select:focus, textarea:focus {
   }
   
   .carousel-content {
-    min-height: 750px;
+    min-height: 400px;
     max-width: 100%;
     perspective: 600px;
   }
-  
+
   .carousel-content .recommendation-card {
-    min-height: 750px;
+    height: 400px;
+    min-height: 400px;
+    max-height: 400px;
     max-width: 100%;
   }
   
@@ -1682,17 +1733,25 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   justify-content: center;
   gap: 1rem;
-  margin-top: 2rem;
+  margin-top: 0.5rem;
   width: 100%;
-  max-width: var(--card-width);
   margin-left: auto;
   margin-right: auto;
 }
 
 .recommendation-actions .submit-button {
-  flex: 1;
-  min-width: 180px;
-  max-width: calc(var(--card-width) / 2 - 0.5rem);
+  flex: 0;
+  min-width: 160px;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.85rem;
+}
+
+.cast-here-link {
+  text-decoration: none;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Group Mode Styles */

@@ -686,11 +686,12 @@ export class AIService {
       if (!recommendations?.length) {
         // If no exact matches found, try fallback to popular movies
         console.log("No exact matches found, trying fallback to popular movies...");
+        const firstYear = parseInt((options.preferredYear || '').match(/\d{4}/)?.[0] || '0');
         const fallbackRecommendations = await getPopularMoviesByGenreAndLanguage(
           options.genres,
           options.languages,
           toTmdbMediaTypes(options.mediaType)[0],
-          parseInt(options.preferredYear || '0')
+          firstYear
         );
 
         if (fallbackRecommendations.length > 0) {
@@ -739,7 +740,7 @@ ${options.plotPreference ? `1. PLOT ELEMENTS (HIGHEST PRIORITY): "${options.plot
    - Distribute recommendations evenly across the requested languages
 3. GENRES: ${options.genres.join(', ') || 'any'}
 ${options.similarMovies?.length ? `4. SIMILAR TO: ${options.similarMovies.join(', ')} — consider plot structure, themes, tone, and style` : ''}
-${options.preferredYear ? `5. PREFERRED YEAR: ${options.preferredYear} (within ±5 years is acceptable)` : ''}
+${options.preferredYear ? `5. PREFERRED YEAR: ${options.preferredYear} (this may be a single year, a range like 2020-2025, or a list like 2020, 2023 — recommend titles from within these years, ±2 years is acceptable)` : ''}
 ${options.preferredCast?.length ? `6. NOTABLE CAST/CREW: ${options.preferredCast.join(', ')}` : ''}
 ${options.minImdbRating ? `7. MINIMUM RATING: ${options.minImdbRating}+` : ''}
 8. MATURE CONTENT: ${options.allowAdult ? 'Allowed' : 'Excluded'}

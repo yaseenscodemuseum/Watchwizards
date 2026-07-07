@@ -272,10 +272,8 @@ export default function SoloPage() {
 
   const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    if (/^\d{0,4}(-\d{0,4})?$/.test(value)) {
+    if (/^[\d,\s-]*$/.test(value)) {
       setPreferredYear(value);
-    } else if (value === '') {
-      setPreferredYear(''); // Ensure controlled input remains controlled
     }
   };
 
@@ -331,7 +329,7 @@ export default function SoloPage() {
   };
 
   return (
-    <main className="h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-gray-900 relative overflow-hidden selection-page">
+    <main className="h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-gray-900 relative overflow-hidden selection-page solo-page">
       {/* Magical particles/stars effect */}
       <div className="absolute inset-0 z-0">
         <div className="stars"></div>
@@ -497,6 +495,10 @@ export default function SoloPage() {
                       <span>Supernatural</span>
                     </label>
                     <label className="language-option">
+                      <input type="checkbox" name="genre" value="sports" />
+                      <span>Sports</span>
+                    </label>
+                    <label className="language-option">
                       <input type="checkbox" name="genre" value="thriller" />
                       <span>Thriller</span>
                     </label>
@@ -530,7 +532,7 @@ export default function SoloPage() {
                     name="preferredYear"
                     value={preferredYear}
                     onChange={handleYearChange}
-                    placeholder="e.g., 2011 or 2009-2011"
+                    placeholder="e.g., 2025-2026 or 2025, 2026"
                   />
                 </div>
 
@@ -749,6 +751,14 @@ export default function SoloPage() {
                     'Similar Recommendations'
                   )}
                 </motion.button>
+                <a
+                  href="https://fmhy.net/video"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="submit-button cast-here-link"
+                >
+                  Cast Here
+                </a>
                 <motion.button
                   onClick={handleDifferentRecommendations}
                   disabled={isLoading}

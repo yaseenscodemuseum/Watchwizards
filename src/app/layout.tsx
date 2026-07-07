@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Analytics } from '@vercel/analytics/next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'WatchWizards',
@@ -25,6 +26,9 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <a href="https://yaseensportfolio.vercel.app" target="_blank" rel="noopener noreferrer" className="site-logo">
+          <img src="/background/logo.svg" alt="WatchWizards" />
+        </a>
         {children}
         <Analytics />
       </body>
