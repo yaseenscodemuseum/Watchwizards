@@ -1,18 +1,10 @@
 import { NextResponse } from 'next/server';
-import { AIService } from '../service';
-
-interface MoviePreference {
-  languages: string[];
-  genres: string[];
-  plotPreference?: string;
-  preferredYear?: string;
-  [key: string]: any;
-}
+import { AIService, buildMoviePreferences, RECOMMENDATION_FIELD_GUIDANCE } from '../service';
 
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const { currentRecommendations, preferences = {} as MoviePreference } = data;
+    const { currentRecommendations, preferences = {} } = data;
 
     if (!currentRecommendations?.length) {
       return NextResponse.json(
@@ -39,17 +31,12 @@ Please recommend 5 DIFFERENT movies that:
    ${preferences.plotPreference ? `- Plot elements: ${preferences.plotPreference}` : ''}
    ${preferences.preferredYear ? `- Preferred year: ${preferences.preferredYear}` : ''}
 
-For each recommendation, the description should explain why it's similar to the above movies and how it matches their themes/style.`;
+For each recommendation, the description should explain why it's similar to the above movies and how it matches their themes/style.
 
-    // Update the preferences to include the similar movies
-    const updatedPreferences = {
-      ...preferences,
-      similarMovies: currentRecommendations.map((movie: any) => movie.title).join(', '),
-      similarityMode: 'similar'
-    };
+${RECOMMENDATION_FIELD_GUIDANCE}`;
 
     const aiService = new AIService();
-    const recommendations = await aiService.getRecommendations(updatedPreferences, similarPrompt);
+    const recommendations = await aiService.getRecommendations(buildMoviePreferences(preferences), similarPrompt);
 
     if (!recommendations?.results?.length) {
       return NextResponse.json(

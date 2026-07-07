@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { AIService, buildMoviePreferences, levenshteinDistance } from './service';
+import { AIService, buildMoviePreferences } from './service';
 
 export async function POST(request: Request) {
   try {
@@ -14,15 +14,6 @@ export async function POST(request: Request) {
         return NextResponse.json(
           { error: 'No movies found that match your criteria. Please try different preferences.' },
           { status: 404 }
-        );
-      }
-
-      // Sort recommendations based on title similarity to user query
-      if (data.query) {
-        const userQuery = data.query.toLowerCase();
-        recommendations.results.sort((a, b) =>
-          levenshteinDistance(a.title.toLowerCase(), userQuery) -
-          levenshteinDistance(b.title.toLowerCase(), userQuery)
         );
       }
 

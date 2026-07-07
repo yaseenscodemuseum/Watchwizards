@@ -19,12 +19,16 @@ export interface RecommendationRequest {
   languages: string[];
   genres: string[];
   plot?: string;
+  plotPreference?: string;
   similarMovies?: string;
   preferredYear?: string;
   cast?: string;
   rating?: string;
   mature?: boolean;
+  vibe?: string;
 }
+
+export type RecommendationVibe = 'crowd' | 'acclaimed' | 'gems';
 
 export interface MovieDetails {
   id: string;
@@ -35,6 +39,7 @@ export interface MovieDetails {
   genres: string[];
   originalLanguage: string;
   voteAverage: number;
+  voteCount: number;
   cast: string[];
   director: string;
   imdbId: string | null;
@@ -95,6 +100,7 @@ interface MoviePreference {
   preferredCast?: string[];
   minImdbRating?: number;
   allowAdult: boolean;
+  vibe?: RecommendationVibe;
 }
 
 // TMDB API configuration
@@ -435,7 +441,7 @@ async function enrichRecommendations(
     }
 
     if (searchResult) {
-      const movieDetails = await enrichMovieWithDetails(searchResult, recommendation.description, requestedLanguages);
+      const movieDetails = await enrichMovieWithDetails(searchResult, recommendation.description);
       if (movieDetails) {
         recommendations.push({
           ...movieDetails,
@@ -611,12 +617,13 @@ async function searchExactMovie(title: string, year: number, mediaType: string, 
       console.log(`Match: "${match.resultTitle}" (${match.resultYear}) - Similarity: ${match.similarity.toFixed(2)}, Year diff: ${match.yearDiff}, Language: ${match.result.original_language}`);
     });
 
-    const bestMatch = matches.find((match: MovieMatch) =>
-      match.languageMatch && (
-        (match.similarity > 0.7 && match.yearDiff <= 1) ||
-        (match.similarity > 0.9)
-      )
-    );
+    // Prefer a match in a requested language, but don't drop a high-confidence
+    // title match just because its original language wasn't requested
+    const isStrongMatch = (match: MovieMatch) =>
+      (match.similarity > 0.7 && match.yearDiff <= 1) || match.similarity > 0.9;
+    const bestMatch =
+      matches.find((match: MovieMatch) => match.languageMatch && isStrongMatch(match)) ||
+      matches.find(isStrongMatch);
 
     if (bestMatch) {
       console.log(`Selected best match: "${bestMatch.resultTitle}" (${bestMatch.resultYear}), Language: ${bestMatch.result.original_language}`);
@@ -633,8 +640,7 @@ async function searchExactMovie(title: string, year: number, mediaType: string, 
 
 async function enrichMovieWithDetails(
   movie: TMDBResult,
-  description: string,
-  requestedLanguages?: string[]
+  description: string
 ): Promise<MovieDetails | null> {
   try {
     const mediaType = movie.first_air_date ? 'tv' : 'movie';
@@ -658,6 +664,7 @@ async function enrichMovieWithDetails(
       genres: details.genres?.map((g: TMDBGenre) => g.name) || [],
       originalLanguage: movie.original_language,
       voteAverage: movie.vote_average,
+      voteCount: movie.vote_count || 0,
       cast,
       director,
       imdbId: details.imdb_id || null,
@@ -667,7 +674,7 @@ async function enrichMovieWithDetails(
       relevancePosition: 0,
       mediaType,
       type: mediaType === 'movie' ? 'movie' : 'webseries',
-      language: requestedLanguages?.[0] || 'en'
+      language: movie.original_language || 'en'
     };
   } catch (error) {
     console.error(`Error enriching movie details for "${movie.title || movie.name}":`, error);
@@ -675,30 +682,79 @@ async function enrichMovieWithDetails(
   }
 }
 
+// 0..1 score of how well a title fits the requested vibe. Popularity uses a
+// log scale so a million-vote blockbuster doesn't dwarf a 50k-vote favorite.
+function vibeScore(rec: MovieDetails, vibe: RecommendationVibe): number {
+  const popularity = Math.min(1, Math.max(0, (Math.log10(rec.voteCount + 1) - 1) / 4));
+  if (vibe === 'crowd') return popularity;
+  if (vibe === 'acclaimed') return Math.min(1, Math.max(0, (rec.voteAverage - 5) / 3.5));
+  return 1 - popularity; // gems
+}
+
+// A perfect vibe score can move a title at most ~1-2 positions, so the AI's
+// relevance ordering still dominates and the vibe never filters anything out
+const VIBE_NUDGE_WEIGHT = 1.5;
+
+function applyVibeNudge(recommendations: MovieDetails[], vibe: RecommendationVibe): void {
+  const order = new Map(recommendations.map((rec, i) => [rec.tmdbId, i]));
+  recommendations.sort((a, b) =>
+    (order.get(a.tmdbId)! - VIBE_NUDGE_WEIGHT * vibeScore(a, vibe)) -
+    (order.get(b.tmdbId)! - VIBE_NUDGE_WEIGHT * vibeScore(b, vibe))
+  );
+}
+
+// Shared with the similar/different routes so their custom prompts produce the
+// same field shapes the TMDB matching relies on
+export const RECOMMENDATION_FIELD_GUIDANCE = `Field guidance:
+- title: the original title in its native script (e.g. 기생충, 千と千尋の神隠し)
+- englishTitle: the English release title, or "" if the original title is already English
+- language: the ISO 639-1 code of the original language (en, ko, ja, hi, fr, de, es, ur, ...)
+- description: two sentences — first a plot summary, then why it matches the preferences
+- year: the first release year
+- matchType: EXACT when a requested plot element is the main focus, CLOSE when it is significant but not central, NONE otherwise`;
+
 export class AIService {
   async getRecommendations(options: MoviePreference, customPrompt?: string): Promise<{ results: MovieDetails[] }> {
     const prompt = customPrompt || this.getAIPrompt(options);
 
     try {
       const aiRecommendations = await getStructuredRecommendations(prompt);
-      const recommendations = await enrichRecommendations(aiRecommendations, options.languages, options.mediaType);
+      let recommendations = await enrichRecommendations(aiRecommendations, options.languages, options.mediaType);
 
-      if (!recommendations?.length) {
-        // If no exact matches found, try fallback to popular movies
-        console.log("No exact matches found, trying fallback to popular movies...");
-        const firstYear = parseInt((options.preferredYear || '').match(/\d{4}/)?.[0] || '0');
+      // Enforce the minimum rating only when the user explicitly asked for one
+      if (options.minImdbRating) {
+        recommendations = recommendations.filter(rec => rec.voteAverage >= options.minImdbRating!);
+      }
+
+      if (options.vibe && recommendations.length > 1) {
+        applyVibeNudge(recommendations, options.vibe);
+      }
+
+      // Top up with popular titles when TMDB matching (or the rating filter)
+      // dropped some of the AI's recommendations
+      if (recommendations.length < 5) {
+        console.log(`Only ${recommendations.length} recommendations survived enrichment, topping up with popular titles...`);
+        const years = (options.preferredYear || '').match(/\d{4}/g)?.map(Number) || [];
         const fallbackRecommendations = await getPopularMoviesByGenreAndLanguage(
           options.genres,
           options.languages,
           toTmdbMediaTypes(options.mediaType)[0],
-          firstYear
+          years.length ? Math.min(...years) : 0,
+          years.length ? Math.max(...years) : 0,
+          options.vibe
         );
 
-        if (fallbackRecommendations.length > 0) {
-          console.log(`Found ${fallbackRecommendations.length} fallback recommendations`);
-          return { results: fallbackRecommendations };
+        const seenIds = new Set(recommendations.map(rec => rec.tmdbId));
+        for (const fallback of fallbackRecommendations) {
+          if (recommendations.length >= 5) break;
+          if (seenIds.has(fallback.tmdbId)) continue;
+          if (options.minImdbRating && fallback.voteAverage < options.minImdbRating) continue;
+          seenIds.add(fallback.tmdbId);
+          recommendations.push(fallback);
         }
+      }
 
+      if (!recommendations.length) {
         throw new Error('No recommendations found that match your criteria');
       }
 
@@ -710,6 +766,15 @@ export class AIService {
   }
 
   private getAIPrompt(options: MoviePreference) {
+    const vibeGuidance = options.vibe ? {
+      crowd: `
+Audience vibe: CROWD FAVORITES — favor widely watched, well-loved titles: box-office hits, nostalgic favorites, and culturally significant films. Popularity with general audiences matters more than critic scores; never exclude a beloved title just because its rating is mediocre. This is a tiebreaker, not a filter — the plot, genre, and language preferences above always come first.`,
+      acclaimed: `
+Audience vibe: CRITICALLY ACCLAIMED — favor award-winning, critically praised titles with strong reviews. This is a tiebreaker, not a filter — the plot, genre, and language preferences above always come first.`,
+      gems: `
+Audience vibe: HIDDEN GEMS — favor lesser-known, underseen titles that deserve more attention; avoid the most obvious blockbusters. This is a tiebreaker, not a filter — the plot, genre, and language preferences above always come first.`
+    }[options.vibe] : '';
+
     const wantsSeries = options.mediaType?.includes('webseries');
     const wantsMovies = options.mediaType?.includes('movie') || !wantsSeries;
     const contentLabel = wantsSeries && wantsMovies
@@ -744,31 +809,31 @@ ${options.preferredYear ? `5. PREFERRED YEAR: ${options.preferredYear} (this may
 ${options.preferredCast?.length ? `6. NOTABLE CAST/CREW: ${options.preferredCast.join(', ')}` : ''}
 ${options.minImdbRating ? `7. MINIMUM RATING: ${options.minImdbRating}+` : ''}
 8. MATURE CONTENT: ${options.allowAdult ? 'Allowed' : 'Excluded'}
-
-Field guidance:
-- title: the original title in its native script (e.g. 기생충, 千と千尋の神隠し)
-- englishTitle: the English release title, or "" if the original title is already English
-- language: the ISO 639-1 code of the original language (en, ko, ja, hi, fr, de, es, ur, ...)
-- description: two sentences — first a plot summary, then why it matches the preferences
-- year: the first release year${wantsSeries ? ' (first air date year for series)' : ''}`;
+${vibeGuidance}
+${RECOMMENDATION_FIELD_GUIDANCE}${wantsSeries ? '\n- year: for series, use the first air date year' : ''}`;
   }
 }
 
 export function buildMoviePreferences(data: RecommendationRequest): MoviePreference {
+  const vibe = data.vibe === 'crowd' || data.vibe === 'acclaimed' || data.vibe === 'gems'
+    ? data.vibe
+    : undefined;
   return {
     mediaType: data.contentType || [],
     languages: data.languages || [],
     genres: data.genres || [],
-    plotPreference: data.plot || '',
+    // The form sends this as plotPreference; older clients sent plot
+    plotPreference: data.plot || data.plotPreference || '',
     similarMovies: data.similarMovies?.split(',').map((m: string) => m.trim()).filter(Boolean) || [],
     preferredYear: data.preferredYear || '',
     preferredCast: data.cast?.split(',').map((c: string) => c.trim()).filter(Boolean) || [],
     minImdbRating: data.rating ? parseFloat(data.rating) : undefined,
-    allowAdult: data.mature || false
+    allowAdult: data.mature || false,
+    vibe
   };
 }
 
-async function getPopularMoviesByGenreAndLanguage(genres: string[], languages: string[], mediaType: string, year: number): Promise<MovieDetails[]> {
+async function getPopularMoviesByGenreAndLanguage(genres: string[], languages: string[], mediaType: string, yearFrom: number, yearTo: number, vibe?: RecommendationVibe): Promise<MovieDetails[]> {
   console.log('Fetching popular movies by genre and language...');
   const tmdbGenres = await getTMDBGenres(mediaType);
   const genreIds = genres.map(genre => {
@@ -791,18 +856,29 @@ async function getPopularMoviesByGenreAndLanguage(genres: string[], languages: s
       url.searchParams.append('api_key', process.env.TMDB_API_KEY || '');
       url.searchParams.append('with_genres', genreIds.join('|'));
       url.searchParams.append('page', page.toString());
-      url.searchParams.append('sort_by', 'popularity.desc');
       url.searchParams.append('include_adult', 'false');
+
+      // Discover strategy per vibe: crowd = raw popularity, acclaimed = rating
+      // among widely-voted titles, gems = well-rated titles few people voted on
+      if (vibe === 'acclaimed') {
+        url.searchParams.append('sort_by', 'vote_average.desc');
+        url.searchParams.append('vote_count.gte', '1000');
+      } else if (vibe === 'gems') {
+        url.searchParams.append('sort_by', 'vote_average.desc');
+        url.searchParams.append('vote_count.gte', '100');
+        url.searchParams.append('vote_count.lte', '3000');
+      } else {
+        url.searchParams.append('sort_by', 'popularity.desc');
+      }
 
       if (languages?.length) {
         url.searchParams.append('with_original_language', languages.join('|'));
       }
 
-      if (year > 0) {
-        url.searchParams.append(
-          mediaType === 'tv' ? 'first_air_date_year' : 'primary_release_year',
-          year.toString()
-        );
+      if (yearFrom > 0) {
+        const dateField = mediaType === 'tv' ? 'first_air_date' : 'primary_release_date';
+        url.searchParams.append(`${dateField}.gte`, `${yearFrom}-01-01`);
+        url.searchParams.append(`${dateField}.lte`, `${yearTo || yearFrom}-12-31`);
       }
 
       const response = await fetch(url);
@@ -823,15 +899,17 @@ async function getPopularMoviesByGenreAndLanguage(genres: string[], languages: s
         const date = movie.release_date || movie.first_air_date;
         if (!date) return false;
         const movieYear = new Date(date).getFullYear();
-        return !year || Math.abs(movieYear - year) <= 2;
+        return !yearFrom || (movieYear >= yearFrom - 2 && movieYear <= (yearTo || yearFrom) + 2);
       })
-      .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
+      .sort((a, b) => vibe === 'acclaimed' || vibe === 'gems'
+        ? (b.vote_average || 0) - (a.vote_average || 0)
+        : (b.popularity || 0) - (a.popularity || 0))
       .slice(0, 5);
 
     // Convert to MovieDetails format
     const recommendations: MovieDetails[] = [];
     for (const movie of filteredResults) {
-      const details = await enrichMovieWithDetails(movie, '', languages);
+      const details = await enrichMovieWithDetails(movie, '');
       if (details) {
         recommendations.push(details);
       }
@@ -862,7 +940,7 @@ async function getTMDBGenres(mediaType: string): Promise<{ id: number; name: str
   }
 }
 
-export function levenshteinDistance(a: string, b: string): number {
+function levenshteinDistance(a: string, b: string): number {
   if (a.length === 0) return b.length;
   if (b.length === 0) return a.length;
 

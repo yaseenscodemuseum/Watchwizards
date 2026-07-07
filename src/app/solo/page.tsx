@@ -34,6 +34,7 @@ interface PreferencesData {
   cast: string;
   rating: string;
   mature: boolean;
+  vibe: string;
 }
 
 const wizardIcons = [
@@ -208,7 +209,8 @@ export default function SoloPage() {
       preferredYear: preferredYear,
       cast: String(formData.get('cast') || ''),
       rating: String(formData.get('rating') || ''),
-      mature: formData.get('mature') === 'on'
+      mature: formData.get('mature') === 'on',
+      vibe: String(formData.get('vibe') || 'crowd')
     };
 
     // Store the preferences object
@@ -322,9 +324,10 @@ export default function SoloPage() {
       preferredYear: preferredYear,
       cast: String(formData.get('cast') || ''),
       rating: String(formData.get('rating') || ''),
-      mature: formData.get('mature') === 'on'
+      mature: formData.get('mature') === 'on',
+      vibe: String(formData.get('vibe') || 'crowd')
     };
-    
+
     setFilledFields(countFilledFields(preferences));
   };
 
@@ -501,6 +504,24 @@ export default function SoloPage() {
                     <label className="language-option">
                       <input type="checkbox" name="genre" value="thriller" />
                       <span>Thriller</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Recommendation Style</label>
+                  <div className="content-type-options">
+                    <label className="content-type-option">
+                      <input type="radio" name="vibe" value="crowd" defaultChecked />
+                      <span>Crowd Favorites</span>
+                    </label>
+                    <label className="content-type-option">
+                      <input type="radio" name="vibe" value="acclaimed" />
+                      <span>Critically Acclaimed</span>
+                    </label>
+                    <label className="content-type-option">
+                      <input type="radio" name="vibe" value="gems" />
+                      <span>Hidden Gems</span>
                     </label>
                   </div>
                 </div>
