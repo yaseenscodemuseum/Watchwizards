@@ -237,7 +237,8 @@ function normalizeRecommendations(raw: unknown): MovieRecommendation[] {
 
 // ---------------------------------------------------------------------------
 // AI providers — each is only attempted when its API key is configured.
-// Order is best-quality first: Claude -> Gemini -> OpenAI -> DeepSeek.
+// Order is best-quality first: Claude -> Gemini 2.5 Flash -> Gemini 2.0 Flash -> OpenAI -> DeepSeek -> Qwen3.
+// Any single configured provider is enough for the app to work.
 // ---------------------------------------------------------------------------
 
 type Provider = {
@@ -267,10 +268,10 @@ async function claudeGenerate(prompt: string): Promise<MovieRecommendation[]> {
   return normalizeRecommendations(JSON.parse(textBlock.text));
 }
 
-async function geminiGenerate(prompt: string): Promise<MovieRecommendation[]> {
+async function geminiGenerate(modelName: string, prompt: string): Promise<MovieRecommendation[]> {
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-flash',
+    model: modelName,
     generationConfig: {
       responseMimeType: 'application/json',
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -301,9 +302,7 @@ async function openaiGenerate(prompt: string): Promise<MovieRecommendation[]> {
   return normalizeRecommendations(JSON.parse(text));
 }
 
-async function deepseekGenerate(prompt: string): Promise<MovieRecommendation[]> {
-  // OpenRouter only guarantees valid JSON (json_object), not schema conformance,
-  // so the schema is embedded in the prompt and enforced by normalize.
+async function openRouterGenerate(model: string, label: string, prompt: string): Promise<MovieRecommendation[]> {
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -313,7 +312,7 @@ async function deepseekGenerate(prompt: string): Promise<MovieRecommendation[]> 
       'X-Title': 'WatchWizards'
     },
     body: JSON.stringify({
-      model: 'deepseek/deepseek-chat',
+      model,
       messages: [{
         role: 'user',
         content: `${prompt}\n\nRespond ONLY with a JSON object matching this JSON Schema exactly:\n${JSON.stringify(recommendationJsonSchema)}`
@@ -322,25 +321,27 @@ async function deepseekGenerate(prompt: string): Promise<MovieRecommendation[]> 
     })
   });
   if (!response.ok) {
-    throw new Error(`DeepSeek API error: ${response.status} ${response.statusText}`);
+    throw new Error(`${label} API error: ${response.status} ${response.statusText}`);
   }
   const data = await response.json();
   const text = data.choices?.[0]?.message?.content;
-  if (!text) throw new Error('Empty response from DeepSeek');
+  if (!text) throw new Error(`Empty response from ${label}`);
   return normalizeRecommendations(JSON.parse(text));
 }
 
 const providers: Provider[] = [
   { name: 'Claude', configured: () => !!process.env.ANTHROPIC_API_KEY, generate: claudeGenerate },
-  { name: 'Gemini', configured: () => !!process.env.GEMINI_API_KEY, generate: geminiGenerate },
+  { name: 'Gemini 2.5 Flash', configured: () => !!process.env.GEMINI_API_KEY, generate: (p) => geminiGenerate('gemini-2.5-flash', p) },
+  { name: 'Gemini 2.0 Flash', configured: () => !!process.env.GEMINI_API_KEY, generate: (p) => geminiGenerate('gemini-2.0-flash', p) },
   { name: 'OpenAI', configured: () => !!process.env.OPENAI_API_KEY, generate: openaiGenerate },
-  { name: 'DeepSeek', configured: () => !!process.env.OPENROUTER_API_KEY, generate: deepseekGenerate },
+  { name: 'DeepSeek', configured: () => !!process.env.OPENROUTER_API_KEY, generate: (p) => openRouterGenerate('deepseek/deepseek-chat', 'DeepSeek', p) },
+  { name: 'Qwen3', configured: () => !!process.env.OPENROUTER_API_KEY, generate: (p) => openRouterGenerate('qwen/qwen3-235b', 'Qwen3', p) },
 ];
 
 async function getStructuredRecommendations(prompt: string): Promise<MovieRecommendation[]> {
   const available = providers.filter(p => p.configured());
   if (available.length === 0) {
-    throw new Error('No AI provider is configured. Set ANTHROPIC_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY, or OPENROUTER_API_KEY.');
+    throw new Error('No AI provider is configured. Set at least one of: ANTHROPIC_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY, or OPENROUTER_API_KEY.');
   }
 
   let lastError: unknown = null;

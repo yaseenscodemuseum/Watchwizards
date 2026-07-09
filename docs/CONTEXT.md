@@ -74,6 +74,21 @@ graph TD
     H --> I[Final Selection]
 ```
 
+## 🤖 AI Provider Chain
+
+Recommendations work with **any single provider configured** — the system tries them in order and falls back automatically:
+
+| Priority | Provider | Model | API Key |
+|----------|----------|-------|---------|
+| 1 | Claude | Opus 4.8 | `ANTHROPIC_API_KEY` |
+| 2 | Gemini | 2.5 Flash | `GEMINI_API_KEY` |
+| 3 | Gemini | 2.0 Flash | `GEMINI_API_KEY` |
+| 4 | OpenAI | GPT-4o-mini | `OPENAI_API_KEY` |
+| 5 | DeepSeek | DeepSeek Chat | `OPENROUTER_API_KEY` |
+| 6 | Qwen | Qwen3 235B | `OPENROUTER_API_KEY` |
+
+Set at least one key in `.env.local`. Gemini uses a single key for both models; OpenRouter uses a single key for both DeepSeek and Qwen3.
+
 ## 💡 Key Benefits
 
 - **Personalized Experience**: AI-powered recommendations tailored to individual or group preferences
