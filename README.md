@@ -6,7 +6,7 @@ AI-powered movie and TV show recommendation engine. Pick your languages, genres,
 
 - **Solo Mode** — personalised recommendations based on content type (movies or shows), language, genre, plot elements, similar titles, preferred year/cast, and maturity filters
 - **Popular Right Now** — the 5 most popular movies and 5 most popular shows released in the past 3 months, pulled live from TMDB
-- **Multi-provider AI** — structured-output recommendations via Claude, Gemini (2.5 Flash / 2.0 Flash), OpenAI, DeepSeek, or Qwen3 235B (the latter two via OpenRouter). Only providers with a configured key are tried; they fall through best-first, and any single key is enough for the app to work
+- **Multi-provider AI** — structured-output recommendations via Claude, Gemini (2.5 Flash / 2.0 Flash), OpenAI, Tencent Hy3, or GPT-OSS-120B (the latter two via OpenRouter). Only providers with a configured key are tried; they fall through best-first, and any single key is enough for the app to work
 - **TMDB enrichment** — every AI suggestion is matched against TMDB by title + year + language (Levenshtein similarity), then enriched with poster, genres, rating, cast, director, and external links
 - **Similar / Different** — after receiving results, request more titles that are similar to or different from the current set
 - **Group Mode** — coming soon
@@ -15,7 +15,7 @@ AI-powered movie and TV show recommendation engine. Pick your languages, genres,
 
 - **Framework**: Next.js 15 (App Router), React 19, TypeScript
 - **Styling**: Custom CSS with Framer Motion animations
-- **AI Providers**: Anthropic Claude, Google Gemini, OpenAI, DeepSeek & Qwen3 235B via OpenRouter
+- **AI Providers**: Anthropic Claude, Google Gemini, OpenAI, Tencent Hy3 & GPT-OSS-120B via OpenRouter
 - **Data**: TMDB API, OMDB API
 - **Deployment**: Vercel
 
@@ -39,13 +39,13 @@ npm install
 
 ```env
 # --- AI providers (at least one required) ---
-# Tried best-first: Claude -> Gemini 2.5 Flash -> Gemini 2.0 Flash -> OpenAI -> DeepSeek -> Qwen3 235B
+# Tried best-first: Claude -> Gemini 2.5 Flash -> Gemini 2.0 Flash -> OpenAI -> Tencent Hy3 -> GPT-OSS-120B
 # Only providers with a key set will be used.
 
 # ANTHROPIC_API_KEY=sk-ant-...        # https://console.anthropic.com/settings/keys
 GEMINI_API_KEY=your_gemini_key         # https://aistudio.google.com/app/apikey (powers both Gemini models)
 # OPENAI_API_KEY=sk-proj-...           # https://platform.openai.com/api-keys
-# OPENROUTER_API_KEY=sk-or-...         # https://openrouter.ai/keys (powers DeepSeek and Qwen3 235B)
+# OPENROUTER_API_KEY=sk-or-...         # https://openrouter.ai/keys (powers Hy3 and GPT-OSS, both free)
 
 # --- Data providers (required) ---
 TMDB_API_KEY=your_tmdb_key             # https://www.themoviedb.org/settings/api
@@ -80,7 +80,7 @@ If you use this repo, please credit me or send me a photo of you using it on one
 ## Acknowledgments
 
 - [TMDB](https://www.themoviedb.org/) for the movie and TV database API
-- [Anthropic](https://www.anthropic.com/), [Google AI](https://ai.google.dev/), [OpenAI](https://openai.com/), [DeepSeek](https://deepseek.com/), and [Qwen](https://qwenlm.github.io/) for AI capabilities
+- [Anthropic](https://www.anthropic.com/), [Google AI](https://ai.google.dev/), [OpenAI](https://openai.com/), and [Tencent Hunyuan](https://hunyuan.tencent.com/) for AI capabilities
 - [Vercel](https://vercel.com/) for hosting
 
 ---

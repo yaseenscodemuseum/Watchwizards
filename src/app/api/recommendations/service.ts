@@ -237,7 +237,7 @@ function normalizeRecommendations(raw: unknown): MovieRecommendation[] {
 
 // ---------------------------------------------------------------------------
 // AI providers — each is only attempted when its API key is configured.
-// Order is best-quality first: Claude -> Gemini 2.5 Flash -> Gemini 2.0 Flash -> OpenAI -> DeepSeek -> Qwen3.
+// Order is best-quality first: Claude -> Gemini 2.5 Flash -> Gemini 2.0 Flash -> OpenAI -> Tencent Hy3 -> GPT-OSS-120B.
 // Any single configured provider is enough for the app to work.
 // ---------------------------------------------------------------------------
 
@@ -334,8 +334,8 @@ const providers: Provider[] = [
   { name: 'Gemini 2.5 Flash', configured: () => !!process.env.GEMINI_API_KEY, generate: (p) => geminiGenerate('gemini-2.5-flash', p) },
   { name: 'Gemini 2.0 Flash', configured: () => !!process.env.GEMINI_API_KEY, generate: (p) => geminiGenerate('gemini-2.0-flash', p) },
   { name: 'OpenAI', configured: () => !!process.env.OPENAI_API_KEY, generate: openaiGenerate },
-  { name: 'DeepSeek', configured: () => !!process.env.OPENROUTER_API_KEY, generate: (p) => openRouterGenerate('deepseek/deepseek-chat', 'DeepSeek', p) },
-  { name: 'Qwen3', configured: () => !!process.env.OPENROUTER_API_KEY, generate: (p) => openRouterGenerate('qwen/qwen3-235b', 'Qwen3', p) },
+  { name: 'Hy3', configured: () => !!process.env.OPENROUTER_API_KEY, generate: (p) => openRouterGenerate('tencent/hy3:free', 'Hy3', p) },
+  { name: 'GPT-OSS', configured: () => !!process.env.OPENROUTER_API_KEY, generate: (p) => openRouterGenerate('openai/gpt-oss-120b:free', 'GPT-OSS', p) },
 ];
 
 async function getStructuredRecommendations(prompt: string): Promise<MovieRecommendation[]> {
